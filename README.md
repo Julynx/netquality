@@ -21,7 +21,7 @@ git clone https://github.com/julynx/netquality
 cd netquality
 sudo chmod +x netquality
 ```
-You can now run ```netquality``` from the folder.
+You can now run ```./netquality``` from the folder.
 
 <br>
 
