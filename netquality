@@ -3,14 +3,15 @@
 """
 @file     netquality
 @brief    Benchmark your internet connection.
-@date     09/07/2023
+@date     10/07/2023
 @author   Julio Cabria
-@deps     speedtest-cli
+@deps     speedtest-cli  https://pypi.org/project/speedtest-cli/
 """
 
 import os
 import sys
 from subprocess import check_output, CalledProcessError
+import speedtest
 
 # https://i.stack.imgur.com/9UVnC.png
 GREEN = "\033[92m"      # Bright green
@@ -128,18 +129,12 @@ class NetworkTest:
         if self._speedtest_results is not None:
             return self._speedtest_results
 
-        results = run_cmd("speedtest-cli --simple")
+        test = speedtest.Speedtest()
+        test.get_best_server()
+        test.download()
+        test.upload(pre_allocate=False)
 
-        self._speedtest_results = {"download": float(grab(results,
-                                                          start="Download: ",
-                                                          end=" Mbit/s")),
-                                   "upload": float(grab(results,
-                                                        start="Upload: ",
-                                                        end=" Mbit/s")),
-                                   "ping": round(float(grab(results,
-                                                            start="Ping: ",
-                                                            end=" ms")), 2)}
-
+        self._speedtest_results = test.results.dict()
         return self._speedtest_results
 
     @property
@@ -163,15 +158,18 @@ class NetworkTest:
 
     @property
     def upload(self):
-        return self._speedtest()["upload"]
+        raw_upload = self._speedtest()["upload"]
+        return round(raw_upload / 1000000, 2)
 
     @property
     def download(self):
-        return self._speedtest()["download"]
+        raw_download = self._speedtest()["download"]
+        return round(raw_download / 1000000, 2)
 
     @property
     def ping(self):
-        return self._speedtest()["ping"]
+        raw_ping = self._speedtest()["ping"]
+        return round(raw_ping, 2)
 
 
 class ResultsTable:
