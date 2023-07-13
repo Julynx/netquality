@@ -3,7 +3,7 @@
 """
 @file     netquality
 @brief    Benchmark your internet connection.
-@date     10/07/2023
+@date     13/07/2023
 @author   Julio Cabria
 @deps     speedtest-cli  https://pypi.org/project/speedtest-cli/
 """
@@ -89,6 +89,33 @@ def grab(text, *, start, end):
     return text[start_index + len(start):end_index]
 
 
+def grab_all(text, *, start, end):
+    """
+    Yield all substrings from a string.
+
+    Usage:
+        grab_all("Http 200 OK Http 404 Not Found", start="Http ", end=" OK")
+        >> ("200", "404")
+
+    Args:
+        text (str): The string to be searched.
+        start (str): The start of the substring.
+        end (str): The end of the substring.
+    """
+    len_start = len(start)
+    len_end = len(end)
+
+    while True:
+        start_index = text.find(start)
+        end_index = text.find(end, start_index + len_start)
+
+        if -1 in (start_index, end_index):
+            return
+
+        yield text[start_index + len_start:end_index]
+        text = text[end_index + len_end:]
+
+
 def run_cmd(cmd) -> str:
     """
     Runs a command and returns the output
@@ -145,14 +172,12 @@ class NetworkTest:
 
     @property
     def jitter(self):
-        times = [float(grab(line,
-                            start="time=",
-                            end=" ms"))
-                 for line
-                 in self._ping().split("\n")
-                 if "time=" in line]
+        times = [float(time)
+                 for time
+                 in grab_all(self._ping(),
+                             start="time=",
+                             end=" ms")]
         avg_time = sum(times) / len(times)
-
         differences = [abs(value - avg_time) for value in times]
         return round(sum(differences) / len(differences), 2)
 
