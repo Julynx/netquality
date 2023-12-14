@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "netquality"
+version = "0.1.0"
+description = "Benchmark your internet connection."
+license = "GPL-2.0-only"
+authors = ["Julio Cabria <juliocabria@tutanota.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+match-func = "^1.0.0"
+string-grab = "^1.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

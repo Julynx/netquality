@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-
 """
 @file     netquality
 @brief    Benchmark your internet connection.
-@date     13/07/2023
+@date     14/12/2023
 @author   Julio Cabria
-@deps     speedtest-cli  https://pypi.org/project/speedtest-cli/
 """
 
 import os
 import sys
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
+
 import speedtest
+from match_func import match
+from string_grab import grab, grab_all
 
 # https://i.stack.imgur.com/9UVnC.png
 GREEN = "\033[92m"      # Bright green
@@ -19,101 +20,6 @@ RED = "\033[91m"        # Bright red
 BLUE = "\033[96m"       # Bright cyan
 YELLOW = "\033[93m"     # Bright yellow
 RESET = "\033[0m"       # Reset to default color
-
-
-def match(variable, dictionary, *, default=None):
-    """
-    Rust-like match function.
-
-    Usage:
-        match(20,
-              {range(0,18): "Should not drive",
-               range(18,90): "Can drive"},
-              default="Should not drive")
-        >> "Can drive"
-
-    Args:
-        variable (any): The variable to be matched.
-        dictionary (dict): A dictionary containing values or ranges as keys
-                           and the matching result as values.
-        default=None (any): The result to return if 'variable' is not in
-                            'dictionary'.
-
-    Returns:
-        any: The matching result for 'value' or 'default'.
-    """
-    if variable in dictionary:
-        return dictionary[variable]
-
-    for key, val in dictionary.items():
-
-        if not hasattr(key, "__contains__"):
-            continue
-
-        if isinstance(key, range):
-            check = int(variable)
-        else:
-            check = variable
-
-        if check in key:
-            return val
-
-    return default
-
-
-def grab(text, *, start, end):
-    """
-    Grab a substring from a string.
-
-    Usage:
-        grab("Http 200 OK", start="Http ", end=" OK")
-        >> "200"
-
-    Args:
-        text (str): The string to be searched.
-        start (str): The start of the substring.
-        end (str): The end of the substring.
-
-    Returns:
-        str: The substring between the start and end strings.
-
-    Raises:
-        LookupError: If the start or end strings are not found.
-    """
-    start_index = text.find(start)
-    end_index = text.find(end, start_index + len(start))
-
-    if -1 in (start_index, end_index):
-        raise LookupError
-
-    return text[start_index + len(start):end_index]
-
-
-def grab_all(text, *, start, end):
-    """
-    Yield all substrings from a string.
-
-    Usage:
-        grab_all("Http 200 OK Http 404 Not Found", start="Http ", end=" OK")
-        >> ("200", "404")
-
-    Args:
-        text (str): The string to be searched.
-        start (str): The start of the substring.
-        end (str): The end of the substring.
-    """
-    len_start = len(start)
-    len_end = len(end)
-
-    while True:
-        start_index = text.find(start)
-        end_index = text.find(end, start_index + len_start)
-
-        if -1 in (start_index, end_index):
-            return
-
-        yield text[start_index + len_start:end_index]
-        text = text[end_index + len_end:]
 
 
 def run_cmd(cmd) -> str:
