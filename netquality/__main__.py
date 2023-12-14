@@ -45,13 +45,13 @@ class NetworkTest:
         if self._speedtest_results is not None:
             return self._speedtest_results
 
-        test = speedtest.Speedtest()
-        test.get_best_server()
         try:
+            test = speedtest.Speedtest()
+            test.get_best_server()
             test.download()
             test.upload(pre_allocate=False)
-        except speedtest.ConfigRetrievalError:
-            print("Failed to retrieve speedtest.net configuration")
+        except speedtest.ConfigRetrievalError as e:
+            print(e)
             sys.exit(1)
 
         self._speedtest_results = test.results.dict()
