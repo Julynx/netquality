@@ -138,6 +138,9 @@ class ResultsTable:
         )
 
     def _compute_rating(self):
+        def get_rating(color, rating_dict):
+            return match(color, rating_dict)
+
         self._download_color = match(
             self._test.download,
             {range(0, 50): RED, range(50, 100): YELLOW, range(100, 500): GREEN},
@@ -170,30 +173,21 @@ class ResultsTable:
 
         rating_dict = {BLUE: 3, GREEN: 2, YELLOW: 1, RED: 0}
 
-        download_rating = match(self._download_color, rating_dict)
-        upload_rating = match(self._upload_color, rating_dict)
-        ping_rating = match(self._ping_color, rating_dict)
-        jitter_rating = match(self._jitter_color, rating_dict)
-        packet_loss_rating = match(self._packet_loss_color, rating_dict)
+        weights = [0.15, 0.15, 0.2, 0.2, 0.3]
+        ratings = [
+            get_rating(color, rating_dict)
+            for color in [
+                self._download_color,
+                self._upload_color,
+                self._ping_color,
+                self._jitter_color,
+                self._packet_loss_color,
+            ]
+        ]
 
-        download_weight = 0.15
-        upload_weight = 0.15
-        ping_weight = 0.2
-        jitter_weight = 0.2
-        packet_loss_weight = 0.3
-
-        global_rating = round(
-            (
-                download_rating * download_weight
-                + upload_rating * upload_weight
-                + ping_rating * ping_weight
-                + jitter_rating * jitter_weight
-                + packet_loss_rating * packet_loss_weight
-            ),
-            2,
+        global_rating = min(
+            (round(sum(w * r for w, r in zip(weights, ratings)) / 3 * 100, 2)), 100
         )
-
-        global_rating = min((global_rating / 3) * 100, 100)
 
         self._rating_color = match(
             global_rating,
