@@ -164,7 +164,7 @@ class ResultsTable:
 
         self._packet_loss_color = match(
             self._test.packet_loss,
-            {0: BLUE, range(1, 3): GREEN, range(3, 6): YELLOW},
+            {range(0, 1): BLUE, range(1, 3): GREEN, range(3, 6): YELLOW},
             default=RED,
         )
 
