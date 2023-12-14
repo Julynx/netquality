@@ -8,11 +8,11 @@
 
 import os
 import sys
-from subprocess import CalledProcessError, check_output
 
 import speedtest
 from match_func import match
-from string_grab import grab, grab_all
+from string_grab import grab_all
+from pythonping import ping
 
 # https://i.stack.imgur.com/9UVnC.png
 GREEN = "\033[92m"  # Bright green
@@ -21,25 +21,7 @@ BLUE = "\033[96m"  # Bright cyan
 YELLOW = "\033[93m"  # Bright yellow
 RESET = "\033[0m"  # Reset to default color
 
-
-def run_cmd(cmd) -> str:
-    """
-    Runs a command and returns the output
-
-    Args:
-        cmd (str): The command to be run.
-    """
-
-    decoded = ""
-
-    try:
-        output = check_output(cmd, shell=True)
-        decoded = output.decode("utf-8").strip()
-
-    except CalledProcessError:
-        output = ""
-
-    return decoded
+COUNT = 50
 
 
 class NetworkTest:
@@ -51,8 +33,12 @@ class NetworkTest:
         if self._ping_results is not None:
             return self._ping_results
 
-        ping_output = run_cmd("ping -c 50 -i 0.2 8.8.8.8")
-        self._ping_results = ping_output
+        ping_output = ping(target="8.8.8.8", count=COUNT, interval=0.2, timeout=2)
+
+        self._packet_loss = (
+            ping_output.stats_packets_sent - ping_output.stats_packets_returned
+        ) / COUNT
+        self._ping_results = "".join(str(r) for r in ping_output._responses)
         return self._ping_results
 
     def _speedtest(self):
@@ -61,23 +47,23 @@ class NetworkTest:
 
         test = speedtest.Speedtest()
         test.get_best_server()
-        test.download()
-        test.upload(pre_allocate=False)
+        try:
+            test.download()
+            test.upload(pre_allocate=False)
+        except speedtest.ConfigRetrievalError:
+            print("Failed to retrieve speedtest.net configuration")
+            sys.exit(1)
 
         self._speedtest_results = test.results.dict()
         return self._speedtest_results
 
     @property
     def packet_loss(self):
-        return round(
-            int(grab(self._ping(), start="received, ", end="% packet loss")), 2
-        )
+        return round(self._packet_loss, 2)
 
     @property
     def jitter(self):
-        times = [
-            float(time) for time in grab_all(self._ping(), start="time=", end=" ms")
-        ]
+        times = [float(time) for time in grab_all(self._ping(), start=" in ", end="ms")]
         avg_time = sum(times) / len(times)
         differences = [abs(value - avg_time) for value in times]
         return round(sum(differences) / len(differences), 2)
