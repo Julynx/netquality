@@ -181,8 +181,8 @@ class ResultsTable:
                 range(0, 50): RED,  # D, E, F
                 range(50, 65): YELLOW,  # C
                 range(65, 90): GREEN,  # A, B
-                range(90, 100): BLUE,
-            },  # S
+                range(90, 100): BLUE,  # S
+            },
             default=RED,
         )
 
@@ -201,13 +201,18 @@ class ResultsTable:
         )
 
 
+def terminal_clear():
+    """Clear the terminal screen with cross-platform support."""
+    os.system("cls" if os.name == "nt" else "clear")
+
+
 def main():
-    os.system("clear")
+    terminal_clear()
     print("Testing connection quality, please wait...")
     test = NetworkTest()
     table = ResultsTable(test)
     table_str = str(table)
-    os.system("clear")
+    terminal_clear()
     print(table_str)
 
 
